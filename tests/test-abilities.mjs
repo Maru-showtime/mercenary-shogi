@@ -227,6 +227,54 @@ function newGameWithBoard(board) {
   assert(g.board[5][4].abilityUsed === true, "帰還桂の能力は使用済みになる");
 }
 
+// --- 帰還桂：取られても相手の持ち駒にならず、自分の持ち駒として戻る ---
+{
+  const board = emptyBoard();
+  board[8][8] = pc("K", SENTE);
+  board[0][0] = pc("K", GOTE);
+  board[4][4] = pc("N", SENTE, "return_knight");
+  board[3][4] = pc("P", GOTE); // 真上の後手歩に取らせる
+  const g = newGameWithBoard(board);
+  g.turn = GOTE;
+  const res = makeMove(g, { x: 4, y: 3 }, { x: 4, y: 4 });
+  assert(res.ok, "後手歩が帰還桂を取る");
+  assert(!g.hands[GOTE]["N"], "取った後手の持ち駒にはならない");
+  assert(g.hands[SENTE]["N"] === 1, "取られた先手の持ち駒として戻る");
+  assert(g.board[4][4].owner === GOTE, "取った駒はそのマスへ進む（盾歩と違い移動は成立する）");
+}
+
+// --- 帰還桂：戻った駒は能力を失っている（打ち直しても普通の桂）---
+{
+  const board = emptyBoard();
+  board[8][8] = pc("K", SENTE);
+  board[0][0] = pc("K", GOTE);
+  board[4][4] = pc("N", SENTE, "return_knight");
+  board[3][4] = pc("P", GOTE);
+  const g = newGameWithBoard(board);
+  g.turn = GOTE;
+  makeMove(g, { x: 4, y: 3 }, { x: 4, y: 4 });
+  g.turn = SENTE;
+  const drop = dropPiece(g, "N", { x: 0, y: 6 });
+  assert(drop.ok, "戻ってきた桂を打てる");
+  assert(g.board[6][0].abilityLost === true, "打ち直した桂は傭兵能力を持たない");
+}
+
+// --- 帰還桂：成って能力を失ったあとは、普通に相手の持ち駒になる ---
+{
+  const board = emptyBoard();
+  board[8][8] = pc("K", SENTE);
+  board[0][0] = pc("K", GOTE);
+  const n = pc("N", SENTE, "return_knight");
+  n.promoted = true;
+  n.abilityLost = true; // 成って能力を失った状態
+  board[4][4] = n;
+  board[3][4] = pc("P", GOTE);
+  const g = newGameWithBoard(board);
+  g.turn = GOTE;
+  makeMove(g, { x: 4, y: 3 }, { x: 4, y: 4 });
+  assert(g.hands[GOTE]["N"] === 1, "能力を失っていれば通常どおり相手の持ち駒になる");
+}
+
 // --- 竜牙角：最初から馬の動き、成りの概念を持たない ---
 {
   const board = emptyBoard();

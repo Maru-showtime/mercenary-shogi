@@ -1,10 +1,69 @@
 [
-  { "name": "一点賭け", "roster": ["dragon_silver", "opening_dash_pawn"] },
-  { "name": "攻撃型", "roster": ["fang_bishop", "return_knight"] },
-  { "name": "バランス", "roster": ["shield_pawn", "diagonal_pawn", "opening_dash_pawn"] },
-  { "name": "守備型", "roster": ["decoy_gold", "brave_king"] },
-  { "name": "銀備え", "roster": ["retreating_silver", "three_way_knight", "opening_dash_pawn"] },
-  { "name": "遊撃", "roster": ["reverse_lance", "reverse_lance", "opening_dash_pawn"] },
-  { "name": "車輪", "roster": ["wheel_rook", "return_knight"] },
-  { "name": "先駆け", "roster": ["vanguard_pawn", "retreating_silver"] }
+  {
+    "name": "一点賭け",
+    "roster": [
+      "dragon_silver",
+      "opening_dash_pawn"
+    ]
+  },
+  {
+    "name": "攻撃型",
+    "roster": [
+      "fang_bishop",
+      "opening_dash_pawn"
+    ]
+  },
+  {
+    "name": "バランス",
+    "roster": [
+      "shield_pawn",
+      "diagonal_pawn",
+      "opening_dash_pawn"
+    ]
+  },
+  {
+    "name": "守備型",
+    "roster": [
+      "decoy_gold",
+      "brave_king"
+    ]
+  },
+  {
+    "name": "銀備え",
+    "roster": [
+      "retreating_silver",
+      "three_way_knight",
+      "opening_dash_pawn"
+    ]
+  },
+  {
+    "name": "遊撃",
+    "roster": [
+      "reverse_lance",
+      "reverse_lance",
+      "opening_dash_pawn"
+    ]
+  },
+  {
+    "name": "車輪",
+    "roster": [
+      "wheel_rook",
+      "opening_dash_pawn"
+    ]
+  },
+  {
+    "name": "先駆け",
+    "roster": [
+      "vanguard_pawn",
+      "retreating_silver"
+    ]
+  },
+  {
+    "name": "帰還",
+    "roster": [
+      "return_knight",
+      "diagonal_pawn",
+      "opening_dash_pawn"
+    ]
+  }
 ]

@@ -52,12 +52,39 @@ def local_secret_words():
     return sorted(w for w in words if len(w) >= 3)
 
 
+def extra_secret_words():
+    """環境から導けない語（漢字の氏名など）を、リポジトリの外のファイルから読む。
+
+    ホームディレクトリに置くのが要点。リポジトリ内に置くと、
+    ドラッグ&ドロップでアップロードした時に一緒に公開されてしまう
+    （.gitignore は git を使わない運用では効かない）。
+    """
+    path = os.path.join(os.path.expanduser("~"), ".publish-private-words.txt")
+    if not os.path.exists(path):
+        return [], path
+    words = [w.strip() for w in io.open(path, encoding="utf-8")
+             if w.strip() and not w.lstrip().startswith("#")]
+    return [w for w in words if len(w) >= 2], path
+
+
 secrets = local_secret_words()
+extra, extra_path = extra_secret_words()
+secrets = sorted(set(secrets) | set(extra))
+
 if secrets:
-    PATTERNS.insert(0, ("氏名・所属など（環境から推測）",
+    PATTERNS.insert(0, ("氏名・所属など",
                         re.compile("|".join(re.escape(w) for w in secrets), re.I)))
-    print("この環境から推測した要注意語: " + "、".join(secrets))
-    print("（この一覧はファイルに保存されないので、リポジトリには残りません）\n")
+    print(f"要注意語 {len(secrets)} 語で検査します（環境から{len(secrets) - len(extra)}語 ＋ 追加{len(extra)}語）")
+    print("（一覧はリポジトリ内に保存されません）")
+
+if not extra:
+    print()
+    print("!" * 68)
+    print("  漢字の氏名など、パスから導けない語は検査できていません。")
+    print(f"  次の場所に1行1語で書いてください（リポジトリの外なので公開されません）:")
+    print(f"    {extra_path}")
+    print("!" * 68)
+print()
 
 hits = []
 binaries = []

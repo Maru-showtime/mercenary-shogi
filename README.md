@@ -47,6 +47,15 @@ python tools/dev-server.py 8765
 
 `http://localhost:8765/` が開きます。localhost 限定で待ち受けるので、外部には公開されません。
 
+### 公開する前に
+
+**[`PUBLISH-CHECKLIST.md`](PUBLISH-CHECKLIST.md) を毎回実行する。**
+最初の1本は個人情報の検査で、これは飛ばさない。
+
+```
+python tests/security-scan.py
+```
+
 ### テストと検査
 
 ビルドもテストランナーも入れていないので、Node と Python があればそのまま動きます。

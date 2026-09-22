@@ -132,7 +132,9 @@ export function makeMove(state, from, to, promote) {
   nextBoard[from.y][from.x] = null;
 
   if (captured && !(captureOutcome && captureOutcome.vanish)) {
-    addToHand(nextHands, owner, captured.type);
+    // 帰還桂は取った側ではなく、取られた側の持ち駒に戻る
+    const receiver = captureOutcome && captureOutcome.toOwner ? captured.owner : owner;
+    addToHand(nextHands, receiver, captured.type);
   }
   if (promotionBonus && promotionBonus.type === "refillMercenary") {
     nextMercPool[owner].push(promotionBonus.mercenaryId);
@@ -145,6 +147,8 @@ export function makeMove(state, from, to, promote) {
   let abilityEvent = null;
   if (captureOutcome && captureOutcome.vanish) {
     abilityEvent = { type: "vanish", x: to.x, y: to.y };
+  } else if (captureOutcome && captureOutcome.toOwner) {
+    abilityEvent = { type: "returnToOwner", x: to.x, y: to.y };
   } else if (isReturnMove) {
     abilityEvent = { type: "return", x: to.x, y: to.y };
   }

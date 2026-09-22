@@ -63,7 +63,24 @@ async function loadSprites() {
   };
 }
 
+// 傭兵の専用イラスト。mercenaries.json の "image" に書かれたものだけ読む。
+// 探索しないので、書いていない傭兵のぶんの 404 は出ない。
+async function loadMercenarySprites(defs) {
+  const set = {};
+  for (const def of Object.values(defs)) {
+    if (!def.image) continue;
+    const url = `${SPRITE_DIR}/${def.image}`;
+    if (await exists(url)) {
+      set[def.id] = { kind: "image", url, mercId: def.id };
+    } else {
+      console.warn(`${def.name} の image "${def.image}" が見つかりません。元の駒の絵を使います`);
+    }
+  }
+  return set;
+}
+
 const sprites = await loadSprites();
+const mercenarySprites = await loadMercenarySprites(mercenaryDefs);
 configureMercenaries(mercenaryDefs);
 
 let aiOwner = GOTE; // CPU戦でAIが受け持つ側。編成画面で切り替えられる
@@ -116,6 +133,7 @@ const draftView = createDraftView(draftColumnsEl, mercenaryDefs, pieceDefs, { sp
 const boardView = createBoardView(boardEl, pieceDefs, {
   mercenaryDefs,
   sprites,
+  mercenarySprites,
   coords: { files: document.getElementById("board-files"), ranks: document.getElementById("board-ranks") },
 });
 const handSenteView = createHandView(handSenteEl, SENTE, pieceDefs, { mercenaryDefs });

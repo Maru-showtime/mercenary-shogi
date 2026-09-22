@@ -171,20 +171,27 @@ def main():
         sys.exit(1)
 
     src = Path(args[0])
-    piece = args[1].upper()
-    if piece not in {"P", "L", "N", "S", "G", "K", "R", "B"}:
-        print(f"駒の種類が不正です: {piece}（P/L/N/S/G/K/R/B のいずれか）")
-        sys.exit(1)
+    name = args[1]
+    base_types = {"P", "L", "N", "S", "G", "K", "R", "B"}
 
     keep_background = "--keep-background" in flags
     layered = "--layered" in flags
     side = "sente" if "--sente" in flags else "gote" if "--gote" in flags else None
 
     root = Path(__file__).resolve().parent.parent
-    out_dir = root / "assets" / "sprites" / side if side else root / "assets" / "sprites"
-    out_dir.mkdir(parents=True, exist_ok=True)
     ext = "png" if "--png" in flags else "webp"
-    out = out_dir / f"{piece}.{ext}"
+
+    # 通常の駒は駒種1文字で指定する。傭兵の専用イラストなど、それ以外は
+    # assets/sprites/ からの相対パスで出力先を書く（例: mercenaries/shield_pawn）
+    if name.upper() in base_types and "/" not in name:
+        piece = name.upper()
+        out_dir = root / "assets" / "sprites" / side if side else root / "assets" / "sprites"
+        out = out_dir / f"{piece}.{ext}"
+    else:
+        piece = Path(name).name
+        out = root / "assets" / "sprites" / f"{name}.{ext}"
+        out_dir = out.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     def save(image, path):
         if path.suffix == ".webp":

@@ -520,7 +520,10 @@ button,
    --sprite-zoom を上げると寄り、--sprite-shift を下げると上が見える */
 .piece-sprite img.full-body {
   position: absolute;
-  left: 50%;
+  /* --sprite-shift-x は、キャラが絵の左右どちらかに寄っている時だけ使う（既定0）。
+     走っている絵のようにエフェクトが片側へ大きく伸びると、絵の中心がキャラから
+     外れてしまい、そのままでは顔が枠の端に寄る */
+  left: calc(50% + var(--sprite-shift-x, 0%));
   top: var(--sprite-shift, -4%);
   width: auto;
   height: calc(100% * var(--sprite-zoom, 2.6));
@@ -609,8 +612,8 @@ button,
    新しい絵に差し替えたら、その絵の顔幅と目線の高さを測って各行を計算し直すこと。
    実測値と手順は assets/sprites/README.md に残してある。 */
 .piece-sprite-P {
-  --sprite-zoom: 2.27;
-  --sprite-shift: 38.9%;
+  --sprite-zoom: 1.79;
+  --sprite-shift: 37.6%;
 }
 
 .piece-sprite-L {
@@ -637,8 +640,8 @@ button,
 }
 
 .piece-sprite-K {
-  --sprite-zoom: 1.62;
-  --sprite-shift: 20.3%;
+  --sprite-zoom: 1.58;
+  --sprite-shift: 23.2%;
 }
 
 .piece-sprite-R {
@@ -650,6 +653,90 @@ button,
   --sprite-zoom: 1.51;
   --sprite-shift: 21.9%;
 }
+
+/* 傭兵の専用イラスト用の切り出し。
+   mercenaries.json に "image" を足したら、その絵の顔幅と目線を測って
+   ここに1ブロック足すこと（求め方は上と同じ）。
+   足すまでは元の駒の値で表示されるので、その傭兵だけ顔の大きさがずれる。
+
+   例:
+   .piece-sprite-merc-shield_pawn {
+     --sprite-zoom: 2.10;
+     --sprite-shift: 35.0%;
+   }
+*/
+/* 騎手が絵の右寄り。--sprite-shift-x で顔を枠の中央へ寄せる */
+.piece-sprite-merc-wheel_rook {
+  --sprite-zoom: 2.13;
+  --sprite-shift: 5.9%;
+}
+
+.piece-sprite-merc-brave_king {
+  --sprite-zoom: 2.43;
+  --sprite-shift: 20.4%;
+}
+
+.piece-sprite-merc-decoy_gold {
+  --sprite-zoom: 2.06;
+  --sprite-shift: 9.8%;
+}
+
+.piece-sprite-merc-fang_bishop {
+  --sprite-zoom: 2.72;
+  --sprite-shift: -18.5%;
+}
+
+.piece-sprite-merc-dragon_silver {
+  --sprite-zoom: 2.52;
+  --sprite-shift: -12.4%;
+}
+
+/* キャラが絵の左寄り（金色の線が右へ伸びる構図）なので右へずらす */
+.piece-sprite-merc-retreating_silver {
+  --sprite-zoom: 3.24;
+  --sprite-shift: 19.6%;
+  --sprite-shift-x: 13%;
+}
+
+.piece-sprite-merc-return_knight {
+  --sprite-zoom: 2.62;
+  --sprite-shift: 13.7%;
+  --sprite-shift-x: -19%;
+}
+
+.piece-sprite-merc-reverse_lance {
+  --sprite-zoom: 2.27;
+  --sprite-shift: 8.7%;
+}
+
+/* 走る絵で、キャラが絵の右寄りにある。--sprite-shift-x で顔を枠の中央へ寄せる */
+.piece-sprite-merc-opening_dash_pawn {
+  --sprite-zoom: 1.51;
+  --sprite-shift: 39.5%;
+  --sprite-shift-x: -37%;
+}
+
+.piece-sprite-merc-vanguard_pawn {
+  --sprite-zoom: 2.34;
+  --sprite-shift: -12.3%;
+}
+
+.piece-sprite-merc-shield_pawn {
+  --sprite-zoom: 1.89;
+  --sprite-shift: 37.7%;
+}
+
+.piece-sprite-merc-diagonal_pawn {
+  --sprite-zoom: 1.84;
+  --sprite-shift: 40.2%;
+}
+
+/* 騎手の顔が小さい構図なので強めに寄る。馬は枠外になるが顔を優先（元の桂と同じ判断） */
+.piece-sprite-merc-three_way_knight {
+  --sprite-zoom: 3.09;
+  --sprite-shift: -10.8%;
+}
+
 
 /* 成り駒は別絵を用意せず、金色のオーラを重ねる */
 .piece-overlay.promoted .piece-sprite::after {

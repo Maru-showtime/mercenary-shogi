@@ -36,8 +36,9 @@ export function createDraftView(container, mercenaryDefs, pieceDefs, { sprites =
   function buildFace(def, owner) {
     const face = document.createElement("div");
     face.className = "merc-face";
+    // 盤上と同じ絵・同じ切り出しになるよう、mercId を付けて渡す
     const entry = def.image
-      ? { kind: "image", url: `${SPRITE_DIR}/${def.image}` }
+      ? { kind: "image", url: `${SPRITE_DIR}/${def.image}`, mercId: def.id }
       : (sprites[owner] || sprites)[def.baseType];
     if (!entry) {
       // 絵が無いときは元の駒の漢字で代用する（表示が消えるよりは分かる）

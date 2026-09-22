@@ -2,6 +2,7 @@
   "vanguard_pawn": {
     "id": "vanguard_pawn",
     "name": "先駆歩",
+    "image": "mercenaries/vanguard_pawn.webp",
     "baseType": "P",
     "cost": 5,
     "description": "敵陣に入らなくても、いつでも成れる。",
@@ -14,6 +15,7 @@
   "shield_pawn": {
     "id": "shield_pawn",
     "name": "盾歩",
+    "image": "mercenaries/shield_pawn.webp",
     "baseType": "P",
     "cost": 5,
     "description": "取られる時、1回だけ耐えてその場に残る。成ると持ち駒に盾歩が1枚補充される。",
@@ -31,6 +33,7 @@
   "diagonal_pawn": {
     "id": "diagonal_pawn",
     "name": "斜歩",
+    "image": "mercenaries/diagonal_pawn.webp",
     "baseType": "P",
     "cost": 4,
     "description": "斜め前にも1マス進める。",
@@ -56,6 +59,7 @@
   "opening_dash_pawn": {
     "id": "opening_dash_pawn",
     "name": "初手駆けの歩",
+    "image": "mercenaries/opening_dash_pawn.webp",
     "shortName": "初歩",
     "baseType": "P",
     "cost": 1,
@@ -76,6 +80,7 @@
   "reverse_lance": {
     "id": "reverse_lance",
     "name": "遊撃香",
+    "image": "mercenaries/reverse_lance.webp",
     "baseType": "L",
     "cost": 4,
     "description": "前に走れるうえ、後ろと斜め4方向へ1マス動ける。",
@@ -125,6 +130,7 @@
   "three_way_knight": {
     "id": "three_way_knight",
     "name": "三方桂",
+    "image": "mercenaries/three_way_knight.webp",
     "baseType": "N",
     "cost": 4,
     "description": "桂馬の跳び先2箇所に加えて、正面2マス先へも跳べる（3方向）。行き所がない場合は強制成り。",
@@ -142,21 +148,26 @@
   "return_knight": {
     "id": "return_knight",
     "name": "帰還桂",
+    "image": "mercenaries/return_knight.webp",
     "baseType": "N",
-    "cost": 2,
-    "description": "一局に1回、跳ぶ直前の位置に戻れる。戻るのに1手を消費する。",
+    "cost": 4,
+    "description": "一局に1回、跳ぶ直前の位置に戻れる。さらに取られても相手の持ち駒にならず、自分の持ち駒として戻ってくる。",
     "effects": [
       {
         "type": "returnToOrigin"
       },
       {
         "type": "oncePerGame"
+      },
+      {
+        "type": "returnToOwnerOnCapture"
       }
     ]
   },
   "dragon_silver": {
     "id": "dragon_silver",
     "name": "龍騎銀",
+    "image": "mercenaries/dragon_silver.webp",
     "baseType": "S",
     "cost": 9,
     "description": "成ると龍になる。成った時点で傭兵能力は消滅し、以後は龍として振る舞う。",
@@ -170,6 +181,7 @@
   "retreating_silver": {
     "id": "retreating_silver",
     "name": "退銀",
+    "image": "mercenaries/retreating_silver.webp",
     "baseType": "S",
     "cost": 5,
     "description": "真後ろにも引ける。",
@@ -187,6 +199,7 @@
   "decoy_gold": {
     "id": "decoy_gold",
     "name": "影武者",
+    "image": "mercenaries/decoy_gold.webp",
     "baseType": "G",
     "cost": 7,
     "description": "玉が取られる局面で、1回だけ身代わりになって盤上から消える。",
@@ -202,6 +215,7 @@
   "fang_bishop": {
     "id": "fang_bishop",
     "name": "竜牙角",
+    "image": "mercenaries/fang_bishop.webp",
     "baseType": "B",
     "cost": 8,
     "description": "最初から馬の動き（角の動き＋縦横1マス）。成りの概念を持たない。",
@@ -246,6 +260,7 @@
   "wheel_rook": {
     "id": "wheel_rook",
     "name": "車輪飛",
+    "image": "mercenaries/wheel_rook.webp",
     "baseType": "R",
     "cost": 8,
     "description": "最初から龍の動き（飛の動き＋斜め1マス）。成りの概念を持たない。",
@@ -290,6 +305,7 @@
   "brave_king": {
     "id": "brave_king",
     "name": "蛮勇の王",
+    "image": "mercenaries/brave_king.webp",
     "shortName": "蛮勇王",
     "baseType": "K",
     "cost": 3,

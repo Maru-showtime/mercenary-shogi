@@ -8,7 +8,7 @@ import { buildSpriteBox } from "./sprite.js";
 const STAR_COLS = [PROMO_DEPTH, WIDTH - PROMO_DEPTH];
 const STAR_ROWS = [PROMO_DEPTH, HEIGHT - PROMO_DEPTH];
 
-export function createBoardView(container, pieceDefs, { mercenaryDefs = {}, sprites = {}, coords = null } = {}) {
+export function createBoardView(container, pieceDefs, { mercenaryDefs = {}, sprites = {}, mercenarySprites = {}, coords = null } = {}) {
   const cells = [];
   let lastAnimatedToken = null;
   let mode = "text";
@@ -103,7 +103,14 @@ export function createBoardView(container, pieceDefs, { mercenaryDefs = {}, spri
     return el;
   }
 
+  // 傭兵に専用イラストがあれば、能力が生きている間だけそれを使う。
+  // 取られたり成ったりして能力を失ったら、元の駒の絵に戻る。
+  // 「傭兵は能力を失うとただの駒になる」というルールが、そのまま見た目に出る。
   function spriteFor(piece) {
+    if (piece.mercenaryId && !piece.abilityLost) {
+      const merc = mercenarySprites[piece.mercenaryId];
+      if (merc) return merc;
+    }
     const set = sprites[piece.owner] || sprites;
     return set ? set[piece.promotedAs || piece.type] : null;
   }

@@ -119,15 +119,20 @@ export function getPromotionBonus(piece) {
   return def && def.promotionBonus ? def.promotionBonus : null;
 }
 
-// 取られた時の処理。survives: 盾歩のように取られず耐える。vanish: 持ち駒にならず消える（現在使用する傭兵は無し）。
+// 取られた時の処理。
+//   survives : 盾歩のように取られず耐える
+//   vanish   : 持ち駒にならず盤外へ消える（現在使用する傭兵は無し）
+//   toOwner  : 帰還桂のように、相手ではなく自分の持ち駒として戻る
 export function resolveCapture(defenderPiece) {
   const effects = activeEffects(defenderPiece);
   const survive = effects.find((e) => e.type === "surviveCapture");
   if (survive && !defenderPiece.abilityUsed) {
-    return { survives: true, vanish: false };
+    return { survives: true, vanish: false, toOwner: false };
   }
   const vanish = effects.some((e) => e.type === "vanishOnCapture");
-  return { survives: false, vanish };
+  // 消滅と帰還は両立しないので、消滅を優先する
+  const toOwner = !vanish && effects.some((e) => e.type === "returnToOwnerOnCapture");
+  return { survives: false, vanish, toOwner };
 }
 
 export function findActiveDecoy(board, owner) {

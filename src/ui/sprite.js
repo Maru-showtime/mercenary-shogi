@@ -22,10 +22,15 @@ export function buildSpriteImage(url, alt, extraClass) {
 }
 
 // 駒種ごとの切り出し（--sprite-zoom / --sprite-shift）が効く箱を作る。
-// クラス名が style.css の .piece-sprite-P … と対応している
+// クラス名が style.css の .piece-sprite-P … と対応している。
+//
+// 傭兵の専用イラストには .piece-sprite-merc-<id> も付ける。
+// style.css にその指定があればそちらが効き、無ければ元の駒の値がそのまま使われる。
+// 絵を1枚ずつ足していく間、未測定のものは元の駒の切り出しで表示される。
 export function buildSpriteBox(entry, displayType, alt, layer) {
   const box = document.createElement("div");
   box.className = `piece-sprite piece-sprite-${displayType.replace("+", "p")}`;
+  if (entry.mercId) box.classList.add(`piece-sprite-merc-${entry.mercId}`);
   if (layer) box.classList.add(layer);
   if (entry.kind === "svg") {
     box.innerHTML = entry.markup;
