@@ -1,0 +1,1056 @@
+/* 駒字の書体。将棋の駒字の定番は「錦旗体」だが、あれは駒師が彫る書であって
+   自由に使えるフォントではない。楷書寄りの筆書体で雰囲気を寄せている。
+   assets/fonts/YujiSyuku-subset.woff2 は駒に出る17文字だけに絞ったもの（8KB）。
+   Google Fonts から素直に読むと12文字でも275KB落ちてくるため同梱に切り替えた。
+   文字を増やすときは assets/fonts/README.md の手順で作り直すこと。
+   ライセンス: SIL OFL 1.1（assets/fonts/OFL.txt） */
+@font-face {
+  font-family: "Yuji Syuku";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/YujiSyuku-subset.woff2") format("woff2");
+}
+
+:root {
+  /* 駒に書かれる漢字の書体。筆書体が無い環境では明朝へ落とす */
+  --piece-font: "Yuji Syuku", "HG行書体", "游明朝", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --page-pad: 16px;
+  --cell-max: 96px;
+  --panel-width: 128px;
+  /* 盤は「画面幅から左右の駒台と段の目盛りを引いた残り」を9列で割った大きさまで広がる */
+  --cell-size: clamp(28px, calc((100vw - var(--page-pad) * 2 - var(--panel-width) * 2 - var(--coord-size) - 48px) / 9), var(--cell-max));
+  --sente-color: #2b5fa8;
+  --gote-color: #a83232;
+  --board-bg: #e3c489;
+  --board-line: #5a4327;
+  /* 駒は黄楊(つげ)の木地の色。盤よりわずかに明るく黄色い */
+  --piece-face-top: #f8e9c2;
+  --piece-face-bottom: #ecd6a2;
+  --piece-edge: #6b5330;
+  --coord-size: 17px;
+
+  /* 駒の形（本物の歩の実寸 底辺21mm × 高さ25mm、肩幅13mm の比率）。
+     五角形そのものと、絵を切り抜く形の両方がここから計算される。
+     数値を1か所にまとめてあるので、形を変えても絵の切り抜きが必ず追従する */
+  --piece-w: 0.8; /* マスに対する駒の幅 */
+  --piece-h: 0.92; /* マスに対する駒の高さ */
+  --shoulder-x: 0.81; /* 肩の位置（駒の幅に対する割合） */
+  --shoulder-y: 0.2; /* 肩の高さ（駒の高さに対する割合） */
+  --edge-width: 2.5px; /* 駒を囲う線の太さ */
+  --art-inset: 3px; /* 絵を輪郭より内側で切る量。縁の線を絵で潰さないため、線より少し大きく取る */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* display を持つクラス指定が hidden 属性を打ち消してしまうため明示的に優先させる */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+  background: #f2ede3;
+  margin: 0 auto;
+  padding: var(--page-pad);
+  max-width: 1400px;
+  color: #222;
+}
+
+button,
+.cell,
+.hand-piece {
+  touch-action: manipulation;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.app-header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.app-main {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.status {
+  font-weight: bold;
+  min-height: 1.4em;
+  text-align: center;
+  margin: 0;
+}
+
+/* 盤と、その上（筋）・右（段）の目盛りをまとめて置く */
+.board-frame {
+  display: grid;
+  grid-template-columns: auto var(--coord-size);
+  grid-template-rows: var(--coord-size) auto;
+}
+
+/* 目盛りは駒字の書体を当てない（数字と漢数字はフォントの収録外で、
+   結局フォールバックするため）。端末にある明朝で静かに出す */
+.coords {
+  display: grid;
+  font-family: "游明朝", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: calc(var(--coord-size) * 0.8);
+  line-height: 1;
+  color: #6b5330;
+  user-select: none;
+}
+
+.coords span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coords-files {
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-columns: repeat(var(--cols), var(--cell-size));
+}
+
+.coords-ranks {
+  grid-column: 2;
+  grid-row: 2;
+  grid-template-rows: repeat(var(--rows), var(--cell-size));
+}
+
+/* マスの罫線は gap で描く。マスごとに border を持たせると境界で二重線になる */
+.board {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell-size));
+  grid-template-rows: repeat(var(--rows), var(--cell-size));
+  gap: 1px;
+  padding: 1px;
+  background: var(--board-line);
+  border: 3px solid #4a3722;
+  box-shadow: 0 3px 8px rgba(60, 40, 15, 0.35);
+}
+
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border: none;
+  /* 榧(かや)盤の木目。控えめにしないと駒の絵と喧嘩する */
+  background-color: var(--board-bg);
+  background-image: repeating-linear-gradient(
+    93deg,
+    rgba(150, 110, 55, 0.06) 0 2px,
+    rgba(150, 110, 55, 0) 2px 9px
+  );
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+/* 星（目印）。本物の盤と同じく敵陣の境界が交わる4点に打つ。
+   印はマスの左上の角＝交点の上に置くので、4マスにまたがって1つの点に見える */
+.cell.star::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--board-line);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cell.highlight::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--cell-size) * 0.16);
+  border-radius: 50%;
+  background: rgba(60, 140, 60, 0.35);
+}
+
+.cell.selected {
+  outline: 3px solid #2c8c2c;
+  outline-offset: -3px;
+}
+
+/* 盤の木目を消さないよう、色は background-image に重ねる（shorthand だと木目ごと消える） */
+.cell.last-move {
+  background-image: linear-gradient(rgba(255, 215, 0, 0.28), rgba(255, 215, 0, 0.28));
+}
+
+.cell.in-check {
+  background-image: linear-gradient(rgba(220, 30, 30, 0.38), rgba(220, 30, 30, 0.38));
+}
+
+/* アニメーション用の外枠。translate/scale はここ、駒の向き(rotate)は .piece 側に分ける */
+.piece-anim {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.piece-anim.animating {
+  z-index: 2;
+}
+
+.piece-anim.ghost {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ability-flash {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 90, 0.95), rgba(255, 190, 40, 0));
+  pointer-events: none;
+  animation: ability-flash 0.4s ease-out forwards;
+}
+
+@keyframes piece-slide {
+  from {
+    transform: translate(calc(var(--dx) * var(--cell-size)), calc(var(--dy) * var(--cell-size)));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+/* 攻撃：相手の方向へ踏み込んでから戻る */
+@keyframes piece-lunge {
+  0% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(calc(var(--dx) * var(--cell-size) * 0.32), calc(var(--dy) * var(--cell-size) * 0.32));
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* 被弾：白く点滅しながら透明度を下げて消える */
+@keyframes piece-hit {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+  55% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes piece-promote {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes piece-drop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 能力発動：駒の周囲が脈動する */
+@keyframes piece-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.piece-anim.ghost .piece::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: hit-flash 0.3s ease-out forwards;
+}
+
+@keyframes hit-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ability-flash {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* 駒のシルエット。本物の駒（歩の実寸で 底辺21mm × 高さ25mm、肩幅13mm）の比率に合わせた。
+   以前は側面が垂直な左右対称の五角形だったが、実物は上へすぼまっている。
+   縁は clip-path で切られて描けないので、濃い色の土台の上に一回り小さい木地を重ねて縁に見せる。 */
+.piece {
+  --piece-shape: polygon(
+    50% 0%,
+    calc(var(--shoulder-x) * 100%) calc(var(--shoulder-y) * 100%),
+    100% 100%,
+    0% 100%,
+    calc((1 - var(--shoulder-x)) * 100%) calc(var(--shoulder-y) * 100%)
+  );
+  --edge-color: var(--piece-edge);
+  position: relative;
+  width: calc(var(--piece-w) * 100%);
+  height: calc(var(--piece-h) * 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: var(--piece-shape);
+  background: var(--edge-color);
+  /* 盤の上に置かれている感じを出す影。clip-path の形に沿わせるため filter を使う */
+  filter: drop-shadow(0 1px 1px rgba(60, 40, 15, 0.4));
+  font-family: var(--piece-font);
+  font-weight: bold;
+  font-size: calc(var(--cell-size) * 0.46);
+  line-height: 1;
+  color: #111;
+}
+
+/* 木地の面。土台より --edge-width だけ内側に入るので、はみ出た土台が縁になる */
+.piece::before {
+  content: "";
+  position: absolute;
+  inset: var(--edge-width);
+  clip-path: var(--piece-shape);
+  background: linear-gradient(170deg, var(--piece-face-top) 0%, var(--piece-face-bottom) 100%);
+}
+
+/* ::before は絶対配置なので、何もしないと文字より手前に描かれて字が隠れる */
+.piece .label {
+  position: relative;
+  z-index: 1;
+}
+
+.piece.sente {
+  --edge-color: var(--sente-color);
+}
+
+.piece.gote {
+  --edge-color: var(--gote-color);
+  transform: rotate(180deg);
+}
+
+.piece.promoted .label {
+  color: #a83232;
+}
+
+/* 絵は五角形の外側に重ねる（キャラは常に正立し、五角形の向きだけが陣営を示す）。
+   ただし駒の輪郭で切り抜く。切らないと絵と漢字が駒からはみ出し、
+   空きマスの上に絵が乗っているように見えてしまう。
+
+   切り抜きの形は .piece の五角形と同じ比率だが、座標系が違う点に注意。
+   .piece-overlay はマス全体に広がっているのに対し、駒はその中央の
+   --piece-w × --piece-h だけを占める。そのため駒の位置ぶんを足し込んでいる。
+   さらに --art-inset だけ内側で切り、縁の線が絵に潰されないようにしている。 */
+.piece-overlay {
+  --clip-l: calc((1 - var(--piece-w)) / 2 * 100% + var(--art-inset));
+  --clip-t: calc((1 - var(--piece-h)) / 2 * 100% + var(--art-inset));
+  --clip-w: calc(var(--piece-w) * 100% - 2 * var(--art-inset));
+  --clip-h: calc(var(--piece-h) * 100% - 2 * var(--art-inset));
+  clip-path: polygon(
+    calc(var(--clip-l) + 0.5 * var(--clip-w)) var(--clip-t),
+    calc(var(--clip-l) + var(--shoulder-x) * var(--clip-w))
+      calc(var(--clip-t) + var(--shoulder-y) * var(--clip-h)),
+    calc(var(--clip-l) + var(--clip-w)) calc(var(--clip-t) + var(--clip-h)),
+    var(--clip-l) calc(var(--clip-t) + var(--clip-h)),
+    calc(var(--clip-l) + (1 - var(--shoulder-x)) * var(--clip-w))
+      calc(var(--clip-t) + var(--shoulder-y) * var(--clip-h))
+  );
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.piece-overlay.sente {
+  --sp-armor: #4a7fd4;
+  --sp-armor-dark: #2f5aa8;
+  --sp-armor-light: #7aa8ea;
+}
+
+/* 後手の駒は .piece 側を180度回して向きを示しているが、絵は正立のままなので
+   この要素は回らない。そのため切り抜きの形だけ上下を入れ替える（頂点が下） */
+.piece-overlay.gote {
+  clip-path: polygon(
+    calc(var(--clip-l) + 0.5 * var(--clip-w)) calc(var(--clip-t) + var(--clip-h)),
+    calc(var(--clip-l) + var(--shoulder-x) * var(--clip-w))
+      calc(var(--clip-t) + (1 - var(--shoulder-y)) * var(--clip-h)),
+    calc(var(--clip-l) + var(--clip-w)) var(--clip-t),
+    var(--clip-l) var(--clip-t),
+    calc(var(--clip-l) + (1 - var(--shoulder-x)) * var(--clip-w))
+      calc(var(--clip-t) + (1 - var(--shoulder-y)) * var(--clip-h))
+  );
+  --sp-armor: #d45a5a;
+  --sp-armor-dark: #a83c3c;
+  --sp-armor-light: #eb8c8c;
+}
+
+/* 背景にうっすら駒の漢字（成り駒なら「龍」「馬」など正しい表記になる） */
+.piece-ghost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--piece-font);
+  font-weight: bold;
+  font-size: calc(var(--cell-size) * 0.74);
+  line-height: 1;
+  color: rgba(70, 45, 20, 0.3);
+}
+
+/* 漢字は将棋の慣習どおり相手側を上下反転させる。
+   どちらの駒がどちらへ進むのかが一目で分かるようにするため。
+   キャラの絵は顔が逆さまになってしまうので回転させない（正立のまま） */
+.piece-overlay.gote .piece-ghost {
+  transform: rotate(180deg);
+}
+
+/* 絵を見せる窓。駒の外接矩形にぴったり合わせてある。
+   以前はここが駒より内側の小さな四角だったため、飛や角のように横へ広がる絵は
+   窓の辺で真横にバッサリ切れていた。窓を駒と同じ大きさにすると、
+   絵を切るのは .piece-overlay の五角形だけになり、輪郭で切り抜いたように見える。 */
+.piece-sprite {
+  position: relative;
+  width: calc(var(--piece-w) * 100%);
+  height: calc(var(--piece-h) * 100%);
+  margin-bottom: calc((1 - var(--piece-h)) / 2 * 100%);
+  overflow: hidden;
+}
+
+.piece-sprite svg,
+.piece-sprite img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  /* 以前はドット絵だったので pixelated にしていたが、今はイラストなので
+     滑らかに縮小させる。pixelated のままだと縮小時にギザギザになる */
+  image-rendering: auto;
+}
+
+/* 全身画像は拡大して上にずらし、上半身だけを切り出して見せる。
+   --sprite-zoom を上げると寄り、--sprite-shift を下げると上が見える */
+.piece-sprite img.full-body {
+  position: absolute;
+  left: 50%;
+  top: var(--sprite-shift, -4%);
+  width: auto;
+  height: calc(100% * var(--sprite-zoom, 2.6));
+  max-width: none;
+  transform: translateX(-50%);
+  object-fit: fill;
+  image-rendering: auto;
+}
+
+/* 3層重ね：元画像 → 漢字 → 切り抜いたキャラ。
+   2つの層は同じ .piece-sprite なので寸法・拡大率が一致し、座標がずれない */
+.piece-sprite.backdrop,
+.piece-sprite.cutout {
+  position: absolute;
+  bottom: calc((1 - var(--piece-h)) / 2 * 100%);
+}
+
+.piece-sprite.backdrop {
+  z-index: 0;
+}
+
+.piece-sprite.cutout {
+  z-index: 2;
+}
+
+.piece-overlay .piece-ghost {
+  z-index: 1;
+}
+
+/* 傭兵の名前。駒の「広い方の端」に置く。
+   五角形は尖った側が細く、帯を置いても文字が入らないため。
+   先手は駒の下側、後手は駒が180度回っているぶん画面では上側になる。
+   文字は絵と同じく回転させない（逆さまだと読めないため）。 */
+.piece-name {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 62%;
+  box-sizing: border-box;
+  padding: 1.5% 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  background: rgba(20, 14, 6, 0.78);
+  color: #fdf6e4;
+  border-radius: 2px;
+  line-height: 1.25;
+  font-weight: bold;
+  letter-spacing: -0.02em;
+  /* 「初手駆けの歩」のような長い名前でも帯からはみ出さないよう、字数で小さくする */
+  font-size: min(calc(var(--cell-size) * 0.16), calc(var(--cell-size) * 0.56 / var(--name-len, 3)));
+  z-index: 3;
+  /* 親の .piece-overlay が pointer-events:none なので、正式名のツールチップを
+     出すために戻す。クリックはマス（.cell）まで普通に伝わる */
+  pointer-events: auto;
+}
+
+/* 絵モード：この層はマス全体に広がっているので、マスの端からの位置で指定する */
+.piece-overlay .piece-name {
+  bottom: 6%;
+}
+
+.piece-overlay.gote .piece-name {
+  bottom: auto;
+  top: 6%;
+}
+
+/* 漢字モード：帯は駒そのものの中にある。後手は親の駒ごと180度回るので
+   位置は自動で画面上側になり、文字だけ戻せば正立する */
+.piece .piece-name {
+  bottom: 3%;
+  width: 78%;
+}
+
+.piece.gote .piece-name {
+  transform: translateX(-50%) rotate(180deg);
+}
+
+/* 駒ごとの切り出し調整。
+   絵ごとに「元画像の高さに対する顔の大きさ」がバラバラ（金は歩の2.2倍あった）なので、
+   盤上での顔の大きさが揃うように駒ごとに拡大率を決めている。求め方は
+     --sprite-zoom  = 68 ÷ 顔幅(元画像px)                顔幅をマスの13%に揃える
+     --sprite-shift = 57.4% − 目線の高さ(画像高に対する割合) × zoom   目線をマスの56.8%に揃える
+   どちらも .piece-sprite の高さ（= マスの --piece-h）が基準なので、
+   駒の大きさを変えたらこの定数（68 と 57.4%）も計算し直すこと。
+   新しい絵に差し替えたら、その絵の顔幅と目線の高さを測って各行を計算し直すこと。
+   実測値と手順は assets/sprites/README.md に残してある。 */
+.piece-sprite-P {
+  --sprite-zoom: 2.27;
+  --sprite-shift: 38.9%;
+}
+
+.piece-sprite-L {
+  --sprite-zoom: 1.84;
+  --sprite-shift: 29.4%;
+}
+
+/* 桂は騎馬像だが、顔を他と揃えると馬はほぼ枠外になる。
+   40個の駒が並ぶ盤面では顔の大きさが揃っている方が見分けやすいので、顔を優先した */
+.piece-sprite-N {
+  --sprite-zoom: 2.06;
+  --sprite-shift: 38.1%;
+}
+
+.piece-sprite-S {
+  --sprite-zoom: 1.84;
+  --sprite-shift: 40.9%;
+}
+
+/* 金は元画像がバストアップに近く顔が大きいので、逆に引く */
+.piece-sprite-G {
+  --sprite-zoom: 1.01;
+  --sprite-shift: 34.5%;
+}
+
+.piece-sprite-K {
+  --sprite-zoom: 1.62;
+  --sprite-shift: 20.3%;
+}
+
+.piece-sprite-R {
+  --sprite-zoom: 1.7;
+  --sprite-shift: 37.3%;
+}
+
+.piece-sprite-B {
+  --sprite-zoom: 1.51;
+  --sprite-shift: 21.9%;
+}
+
+/* 成り駒は別絵を用意せず、金色のオーラを重ねる */
+.piece-overlay.promoted .piece-sprite::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 205, 60, 0.5), rgba(255, 205, 60, 0) 70%);
+}
+
+/* 傭兵は金色の縁。陣営色（青・赤）と混ざらないよう色は金で固定し、
+   コストの高さは縁の太さで表す */
+/* 傭兵は縁を金色にし、コストの高さは縁の太さで示す。
+   色でコストを分けると後手の赤縁と見分けがつかなくなるため（spec §14） */
+.piece.mercenary {
+  --edge-color: #e8b530;
+  --edge-width: 3px;
+}
+
+.piece.mercenary.tier-mid {
+  --edge-width: 4px;
+}
+
+/* filter は上書きになるので、駒の影も一緒に書き直す */
+.piece.mercenary.tier-high {
+  --edge-width: 5px;
+  filter: drop-shadow(0 1px 1px rgba(60, 40, 15, 0.4)) drop-shadow(0 0 4px rgba(232, 181, 48, 0.95));
+}
+
+/* 能力を使い切った傭兵。金の縁が消えて普通の駒に近づく */
+.piece.ex-mercenary {
+  --edge-color: #999;
+  --edge-width: 2px;
+  opacity: 0.85;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+  width: var(--panel-width);
+}
+
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: calc(var(--cell-size) * 0.8);
+  padding: 6px;
+  border: 1px dashed #aaa;
+}
+
+.hand-piece {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid #333;
+  background: #f5ecd8;
+  cursor: pointer;
+  font-family: var(--piece-font);
+  font-size: 1.1rem;
+}
+
+.hand-piece.selected {
+  outline: 2px solid #2c8c2c;
+}
+
+/* 持ち駒に控えている傭兵の名前。盤上の名前帯と同じ見た目にして、
+   「この歩を打つと盾歩が出る」と結び付けやすくしている */
+.hand-merc {
+  background: rgba(20, 14, 6, 0.78);
+  color: #fdf6e4;
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin-left: 2px;
+  font-size: 0.68rem;
+  font-weight: bold;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* 持ち駒は0だが傭兵だけ控えている状態。打てないので押せない見た目にする */
+.hand-piece.awaiting {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.hand-piece:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 枚数は数字なので駒字の書体を当てず、本文と同じ書体に戻す */
+.hand-piece .count {
+  font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+/* 棋譜は盤の下に置く。横に並べると盤の幅を圧迫するため */
+.log {
+  list-style: none;
+  margin: 12px auto 0;
+  padding: 6px 10px;
+  max-height: 160px;
+  width: min(100%, calc(var(--cell-size) * 9 + 4px));
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 0.85rem;
+  columns: 2;
+  column-gap: 20px;
+}
+
+.log li {
+  padding: 2px 0;
+  border-bottom: 1px solid #eee;
+  break-inside: avoid;
+}
+
+/* 横並びが窮屈になったら、持ち駒→盤→持ち駒＋棋譜の縦積みに切り替える */
+@media (max-width: 900px) {
+  :root {
+    --page-pad: 8px;
+    --coord-size: 15px;
+    /* 縦積みになるので、駒台のぶんを引かず画面幅いっぱいまで盤を広げる */
+    --cell-size: clamp(28px, calc((100vw - var(--page-pad) * 2 - var(--coord-size) - 18px) / 9), var(--cell-max));
+  }
+
+  .app-main {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .side-panel {
+    width: 100%;
+    max-width: calc(var(--cell-size) * 9 + 4px);
+  }
+
+  .log {
+    max-height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.draft-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.intro {
+  width: min(740px, 100%);
+  background: #fff;
+  border: 1px solid #d8cdb4;
+  border-left: 4px solid #a8752b;
+  padding: 12px 16px;
+}
+
+.intro h2 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.intro p {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.intro p:last-child {
+  margin-bottom: 0;
+}
+
+.intro-note {
+  color: #555;
+}
+
+.mode-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.thinking {
+  color: #a8752b;
+  font-style: italic;
+}
+
+.draft-columns {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.draft-column {
+  width: min(420px, 100%);
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 10px;
+}
+
+.draft-column h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.draft-cost {
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.draft-cost.over {
+  color: #a83232;
+}
+
+.draft-section {
+  margin-bottom: 8px;
+}
+
+.draft-section-title {
+  font-size: 0.85rem;
+  color: #555;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 4px;
+}
+
+/* 傭兵カード：顔・名前・コスト・能力を1枚にまとめた「キャラ選択」の単位 */
+.merc-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.merc-card {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  padding: 6px;
+  border: 1px solid #d8cdb4;
+  border-left: 3px solid #cfc3a6;
+  border-radius: 3px;
+  background: #fffdf7;
+}
+
+/* 選んだカードは金の縁。盤上の傭兵の金縁と対応させている */
+.merc-card.checked {
+  border-color: #e0bc5a;
+  border-left-color: #c9962a;
+  background: #fdf6e2;
+  box-shadow: 0 0 0 1px rgba(201, 150, 42, 0.35);
+}
+
+/* 顔。盤と同じ切り出し（--sprite-zoom / --sprite-shift）が効くよう、
+   .piece-sprite の親を正方形にしておくこと。崩すと盤と顔の大きさがずれる */
+.merc-face {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #efe3c6, #e0cfa6);
+}
+
+/* 盤は「駒だと分かる」ための引きの構図だが、カードは顔を見せたいので寄せる。
+   原点の 57% は目線の高さ（.piece-sprite の高さに対する割合）。
+   盤の切り出しをそのまま拡大しているだけなので、絵を差し替えても追従する */
+.merc-face .piece-sprite {
+  transform: scale(1.9);
+  transform-origin: 50% 57%;
+}
+
+.merc-face.no-image {
+  align-items: center;
+  font-family: var(--piece-font);
+  font-size: 1.5rem;
+  color: #6b5330;
+}
+
+.merc-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.merc-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.merc-name {
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.merc-base {
+  font-family: var(--piece-font);
+  font-size: 0.8rem;
+  color: #6b5330;
+  border: 1px solid #d8cdb4;
+  border-radius: 2px;
+  padding: 0 3px;
+}
+
+.merc-cost-wrap {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.merc-cost-label {
+  font-size: 0.68rem;
+  color: #8a7345;
+  letter-spacing: 0.02em;
+}
+
+.merc-cost {
+  min-width: 1.5em;
+  text-align: center;
+  font-weight: bold;
+  color: #6b4a10;
+  background: #f0dda8;
+  border-radius: 2px;
+  padding: 0 5px;
+}
+
+.merc-desc {
+  margin: 3px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+.merc-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.merc-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #555;
+}
+
+.merc-place {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #6b5330;
+}
+
+.draft-summary {
+  display: grid;
+  gap: 6px;
+}
+
+.draft-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* 編成リストが長いので、対局開始ボタンは常に画面下に見えるようにする */
+#start-game {
+  position: sticky;
+  bottom: 12px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background: #2c7a2c;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+#start-game:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

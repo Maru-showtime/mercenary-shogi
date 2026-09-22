@@ -1,0 +1,10 @@
+{
+  "P": { "name": "歩", "promotedName": "と", "promotesTo": "+P" },
+  "L": { "name": "香", "promotedName": "杏", "promotesTo": "+L" },
+  "N": { "name": "桂", "promotedName": "圭", "promotesTo": "+N" },
+  "S": { "name": "銀", "promotedName": "全", "promotesTo": "+S" },
+  "G": { "name": "金", "promotedName": null, "promotesTo": null },
+  "K": { "name": "玉", "promotedName": null, "promotesTo": null },
+  "R": { "name": "飛", "promotedName": "龍", "promotesTo": "+R" },
+  "B": { "name": "角", "promotedName": "馬", "promotesTo": "+B" }
+}

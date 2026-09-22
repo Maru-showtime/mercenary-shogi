@@ -1,0 +1,323 @@
+{
+  "vanguard_pawn": {
+    "id": "vanguard_pawn",
+    "name": "先駆歩",
+    "baseType": "P",
+    "cost": 5,
+    "description": "敵陣に入らなくても、いつでも成れる。",
+    "effects": [
+      {
+        "type": "promoteAnywhere"
+      }
+    ]
+  },
+  "shield_pawn": {
+    "id": "shield_pawn",
+    "name": "盾歩",
+    "baseType": "P",
+    "cost": 5,
+    "description": "取られる時、1回だけ耐えてその場に残る。成ると持ち駒に盾歩が1枚補充される。",
+    "effects": [
+      {
+        "type": "surviveCapture",
+        "times": 1
+      }
+    ],
+    "promotionBonus": {
+      "type": "refillMercenary",
+      "mercenaryId": "shield_pawn"
+    }
+  },
+  "diagonal_pawn": {
+    "id": "diagonal_pawn",
+    "name": "斜歩",
+    "baseType": "P",
+    "cost": 4,
+    "description": "斜め前にも1マス進める。",
+    "effects": [
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": -1,
+          "dy": -1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 1,
+          "dy": -1,
+          "slide": false
+        }
+      }
+    ]
+  },
+  "opening_dash_pawn": {
+    "id": "opening_dash_pawn",
+    "name": "初手駆けの歩",
+    "shortName": "初歩",
+    "baseType": "P",
+    "cost": 1,
+    "description": "一局の最初の1手に限り、前に2マス進める（滑る）。使わずに2手目以降になった時点で能力は消滅する。",
+    "maxCount": 1,
+    "effects": [
+      {
+        "type": "firstMoveOnly",
+        "vector": {
+          "dx": 0,
+          "dy": -1,
+          "slide": true,
+          "maxSteps": 2
+        }
+      }
+    ]
+  },
+  "reverse_lance": {
+    "id": "reverse_lance",
+    "name": "遊撃香",
+    "baseType": "L",
+    "cost": 4,
+    "description": "前に走れるうえ、後ろと斜め4方向へ1マス動ける。",
+    "effects": [
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 0,
+          "dy": 1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": -1,
+          "dy": -1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 1,
+          "dy": -1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": -1,
+          "dy": 1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 1,
+          "dy": 1,
+          "slide": false
+        }
+      }
+    ]
+  },
+  "three_way_knight": {
+    "id": "three_way_knight",
+    "name": "三方桂",
+    "baseType": "N",
+    "cost": 4,
+    "description": "桂馬の跳び先2箇所に加えて、正面2マス先へも跳べる（3方向）。行き所がない場合は強制成り。",
+    "effects": [
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 0,
+          "dy": -2,
+          "slide": false
+        }
+      }
+    ]
+  },
+  "return_knight": {
+    "id": "return_knight",
+    "name": "帰還桂",
+    "baseType": "N",
+    "cost": 2,
+    "description": "一局に1回、跳ぶ直前の位置に戻れる。戻るのに1手を消費する。",
+    "effects": [
+      {
+        "type": "returnToOrigin"
+      },
+      {
+        "type": "oncePerGame"
+      }
+    ]
+  },
+  "dragon_silver": {
+    "id": "dragon_silver",
+    "name": "龍騎銀",
+    "baseType": "S",
+    "cost": 9,
+    "description": "成ると龍になる。成った時点で傭兵能力は消滅し、以後は龍として振る舞う。",
+    "effects": [
+      {
+        "type": "promoteTo",
+        "value": "R"
+      }
+    ]
+  },
+  "retreating_silver": {
+    "id": "retreating_silver",
+    "name": "退銀",
+    "baseType": "S",
+    "cost": 5,
+    "description": "真後ろにも引ける。",
+    "effects": [
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 0,
+          "dy": 1,
+          "slide": false
+        }
+      }
+    ]
+  },
+  "decoy_gold": {
+    "id": "decoy_gold",
+    "name": "影武者",
+    "baseType": "G",
+    "cost": 7,
+    "description": "玉が取られる局面で、1回だけ身代わりになって盤上から消える。",
+    "effects": [
+      {
+        "type": "decoyKing"
+      },
+      {
+        "type": "oncePerGame"
+      }
+    ]
+  },
+  "fang_bishop": {
+    "id": "fang_bishop",
+    "name": "竜牙角",
+    "baseType": "B",
+    "cost": 8,
+    "description": "最初から馬の動き（角の動き＋縦横1マス）。成りの概念を持たない。",
+    "effects": [
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 0,
+          "dy": -1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 0,
+          "dy": 1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": -1,
+          "dy": 0,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 1,
+          "dy": 0,
+          "slide": false
+        }
+      },
+      {
+        "type": "cannotPromote"
+      }
+    ]
+  },
+  "wheel_rook": {
+    "id": "wheel_rook",
+    "name": "車輪飛",
+    "baseType": "R",
+    "cost": 8,
+    "description": "最初から龍の動き（飛の動き＋斜め1マス）。成りの概念を持たない。",
+    "effects": [
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": -1,
+          "dy": -1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 1,
+          "dy": -1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": -1,
+          "dy": 1,
+          "slide": false
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 1,
+          "dy": 1,
+          "slide": false
+        }
+      },
+      {
+        "type": "cannotPromote"
+      }
+    ]
+  },
+  "brave_king": {
+    "id": "brave_king",
+    "name": "蛮勇の王",
+    "shortName": "蛮勇王",
+    "baseType": "K",
+    "cost": 3,
+    "description": "前に2マス進める（滑る）。ただし真後ろには下がれない（斜め後ろは可）。",
+    "effects": [
+      {
+        "type": "removeMove",
+        "vector": {
+          "dx": 0,
+          "dy": -1
+        }
+      },
+      {
+        "type": "extraMove",
+        "vector": {
+          "dx": 0,
+          "dy": -1,
+          "slide": true,
+          "maxSteps": 2
+        }
+      },
+      {
+        "type": "removeMove",
+        "vector": {
+          "dx": 0,
+          "dy": 1
+        }
+      }
+    ]
+  }
+}
