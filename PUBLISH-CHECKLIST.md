@@ -43,9 +43,14 @@ python tests/security-scan.py
 
 ```
 python tests/check-rosters.py       # AI編成が実在する傭兵か・コスト上限内か
-python tests/audit-docs.py          # ドキュメントの数値が実データと合っているか
+python tests/audit-docs.py          # ドキュメントの数値が実データと合っているか／駒字がフォントに入っているか
 python tests/audit-json-samples.py  # spec.md のJSONサンプルが実データと同じ書き方か
+python tests/check-responsive.py    # 駒の形の指定が px 固定になっていないか（スマホで絵がずれる）
 ```
+
+**どれも「静かに失敗する不具合」を捕まえるためのものです。**
+フォントに無い漢字は明朝体に落ちるだけ、px 固定は画面が小さい時だけ崩れる、
+編成の不整合は対局を始めるまで出ない——いずれも目視では見落とします。
 
 ## 3. 動作の検査
 
@@ -59,6 +64,9 @@ node tests/test-ai.mjs
 
 - [ ] 画面に出る文章（`index.html` の「傭兵将棋とは」）が今の仕様と合っているか
 - [ ] `assets/CREDITS.md` の素材の出典が埋まっているか
+- [ ] **スマホ幅（375px 前後）で盤を開き、駒の中の絵がずれていないか**
+      ブラウザの開発者ツールで幅を 375px にして確認する。
+      PC で正しく見えていても、px 固定の指定が混ざると小さい画面でだけ崩れる
 
 ## 5. アップロード
 

@@ -1,6 +1,6 @@
 /* 駒字の書体。将棋の駒字の定番は「錦旗体」だが、あれは駒師が彫る書であって
    自由に使えるフォントではない。楷書寄りの筆書体で雰囲気を寄せている。
-   assets/fonts/YujiSyuku-subset.woff2 は駒に出る17文字だけに絞ったもの（8KB）。
+   assets/fonts/YujiSyuku-subset.woff2 は駒に出る漢字だけに絞ったもの（17字・8KB）。
    Google Fonts から素直に読むと12文字でも275KB落ちてくるため同梱に切り替えた。
    文字を増やすときは assets/fonts/README.md の手順で作り直すこと。
    ライセンス: SIL OFL 1.1（assets/fonts/OFL.txt） */
@@ -37,8 +37,14 @@
   --piece-h: 0.92; /* マスに対する駒の高さ */
   --shoulder-x: 0.81; /* 肩の位置（駒の幅に対する割合） */
   --shoulder-y: 0.2; /* 肩の高さ（駒の高さに対する割合） */
-  --edge-width: 2.5px; /* 駒を囲う線の太さ */
-  --art-inset: 3px; /* 絵を輪郭より内側で切る量。縁の線を絵で潰さないため、線より少し大きく取る */
+  /* 線の太さと絵の切り込み量は「マスに対する割合」で持つこと。px 固定にしてはいけない。
+     絵の位置・大きさはすべて % なのに、切り抜く五角形だけが px だと、
+     マスが小さいほど枠だけが相対的に太くなり、絵が余計に切られてズレて見える。
+     実際にスマホ（マス36px）で art-inset 3px = マスの8.3%（PCでは3.1%）になり、
+     絵の見える範囲が 85.8% → 75.4% まで痩せてキャラが下にずれていた。
+     max() の px は、線が細くなりすぎて消えるのを防ぐ下限。 */
+  --edge-width: max(1px, calc(var(--cell-size) * 0.026)); /* 駒を囲う線の太さ */
+  --art-inset: max(1.2px, calc(var(--cell-size) * 0.031)); /* 絵を輪郭より内側で切る量。線より少し大きく取る */
 }
 
 * {
@@ -751,25 +757,27 @@ button,
    コストの高さは縁の太さで表す */
 /* 傭兵は縁を金色にし、コストの高さは縁の太さで示す。
    色でコストを分けると後手の赤縁と見分けがつかなくなるため（spec §14） */
+/* 太さはマス比で持つ（:root の --edge-width と同じ理由。px 固定にしないこと）。
+   割合は PC のマス96px のときの 3/4/5/2px に一致させてある */
 .piece.mercenary {
   --edge-color: #e8b530;
-  --edge-width: 3px;
+  --edge-width: max(1.2px, calc(var(--cell-size) * 0.031));
 }
 
 .piece.mercenary.tier-mid {
-  --edge-width: 4px;
+  --edge-width: max(1.6px, calc(var(--cell-size) * 0.042));
 }
 
 /* filter は上書きになるので、駒の影も一緒に書き直す */
 .piece.mercenary.tier-high {
-  --edge-width: 5px;
+  --edge-width: max(2px, calc(var(--cell-size) * 0.052));
   filter: drop-shadow(0 1px 1px rgba(60, 40, 15, 0.4)) drop-shadow(0 0 4px rgba(232, 181, 48, 0.95));
 }
 
 /* 能力を使い切った傭兵。金の縁が消えて普通の駒に近づく */
 .piece.ex-mercenary {
   --edge-color: #999;
-  --edge-width: 2px;
+  --edge-width: max(0.8px, calc(var(--cell-size) * 0.021));
   opacity: 0.85;
 }
 

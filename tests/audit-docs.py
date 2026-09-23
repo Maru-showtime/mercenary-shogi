@@ -74,20 +74,39 @@ check(not ghosts, f"spec.md の構成図に存在しないファイルが無い�
 missing = sorted(f for f in ["labels.js", "sprite.js"] if f not in listed)
 check(not missing, f"spec.md の構成図に新しいファイルが載っている（漏れ: {missing or 'なし'}）")
 
-# 6) フォント README の文字数とファイルサイズ
+# 6) フォントが「駒に出る漢字」を全部持っているか
+#
+# サブセットフォントに無い文字は、エラーにならず静かに明朝体へ落ちる。
+# つまり pieces.json に漢字を足してフォントを作り直し忘れると、
+# その駒だけ書体が違う状態のまま気付かず公開されうる。ここで止める。
+pieces = json.load(io.open(ROOT + "src/data/pieces.json", encoding="utf-8"))
+needed = set()
+for d in pieces.values():
+    needed |= set(d.get("name") or "") | set(d.get("promotedName") or "")
+
+# fonts/README.md の「収録している文字」欄（フォントを作った時の記録）
+block = re.search(r"## 収録している文字\s*```(.*?)```", fonts_readme, re.S)
+documented = set((block.group(1) if block else "").split()) if block else set()
+check(bool(documented), "fonts/README.md に「収録している文字」の一覧がある")
+lack = sorted(needed - documented)
+check(not lack, f"駒に出る漢字が fonts/README.md の収録一覧に全て載っている（不足: {lack or 'なし'}）")
+
 try:
     from fontTools.ttLib import TTFont
     f = TTFont(ROOT + "assets/fonts/YujiSyuku-subset.woff2")
     cm = {}
     for t in f["cmap"].tables:
         cm.update(t.cmap)
-    # 空白はサブセット化で自動的に入るので、駒に出る文字数とは別に数える
-    covered = len([c for c in cm if chr(c).strip()])
-    m = re.search(r"(\d+)文字だけに絞った", fonts_readme)
-    if m:
-        check(int(m.group(1)) == covered, f"fonts/README.md の収録文字数 {m.group(1)} が実際({covered})と一致")
+    covered = {chr(c) for c in cm if chr(c).strip()}
+    lack2 = sorted(needed - covered)
+    check(not lack2, f"駒に出る漢字がフォント本体に全て入っている（不足: {lack2 or 'なし'}）")
+    check(documented == covered,
+          f"fonts/README.md の収録一覧がフォント本体と一致（README だけ: {sorted(documented - covered) or 'なし'} / "
+          f"フォントだけ: {sorted(covered - documented) or 'なし'}）")
 except ImportError:
-    print("--  fontTools 無しのためフォントは未検証")
+    # fontTools が無くても「未検証」で素通りさせない。
+    # README の記録との照合は上で済んでいるので、その旨だけ明示する
+    print("--  fontTools 無し: フォント本体は未検証（README の収録一覧との照合のみ実施）")
 size = os.path.getsize(ROOT + "assets/fonts/YujiSyuku-subset.woff2")
 m = re.search(r"([\d,]+) バイト", fonts_readme)
 if m:

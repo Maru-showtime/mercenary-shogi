@@ -83,7 +83,7 @@
     "image": "mercenaries/reverse_lance.webp",
     "baseType": "L",
     "cost": 4,
-    "description": "前に走れるうえ、後ろと斜め4方向へ1マス動ける。",
+    "description": "前に走れるうえ、真後ろと斜め4方向へ1マスずつ動ける。",
     "effects": [
       {
         "type": "extraMove",
@@ -151,7 +151,7 @@
     "image": "mercenaries/return_knight.webp",
     "baseType": "N",
     "cost": 4,
-    "description": "一局に1回、跳ぶ直前の位置に戻れる。さらに取られても相手の持ち駒にならず、自分の持ち駒として戻ってくる。",
+    "description": "一局に1回、跳ぶ直前の位置に戻れる。さらに取られても相手の持ち駒にならず、自分の持ち駒として戻ってくる（戻った駒は普通の桂）。",
     "effects": [
       {
         "type": "returnToOrigin"

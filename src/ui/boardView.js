@@ -53,9 +53,9 @@ export function createBoardView(container, pieceDefs, { mercenaryDefs = {}, spri
   }
 
   // 傭兵は絵も漢字も元の駒と同じなので、名前を出さないと盤上でどれが何か分からない。
-  // 能力を失った駒（abilityLost）はもう普通の駒なので出さない。
+  // 能力を失っても名前は残す（誰だったか分からなくなるため）。能力の有無は縁の色で示す。
   function mercenaryNameBadge(piece) {
-    if (!piece.mercenaryId || piece.abilityLost) return null;
+    if (!piece.mercenaryId) return null;
     const def = mercenaryDefs[piece.mercenaryId];
     if (!def?.name) return null;
     // 盤上の帯は狭いので、長い名前は shortName（「初手駆けの歩」→「初歩」）を使う。
@@ -103,11 +103,11 @@ export function createBoardView(container, pieceDefs, { mercenaryDefs = {}, spri
     return el;
   }
 
-  // 傭兵に専用イラストがあれば、能力が生きている間だけそれを使う。
-  // 取られたり成ったりして能力を失ったら、元の駒の絵に戻る。
-  // 「傭兵は能力を失うとただの駒になる」というルールが、そのまま見た目に出る。
+  // 雇った傭兵は、成っても能力を使い切っても、盤上にいる限り専用イラストのまま。
+  // 能力を失ったことは金の縁が消える（.ex-mercenary）ことで分かるので、
+  // 絵まで元の駒に戻すと「同じ駒なのに別人になった」ように見えてしまう。
   function spriteFor(piece) {
-    if (piece.mercenaryId && !piece.abilityLost) {
+    if (piece.mercenaryId) {
       const merc = mercenarySprites[piece.mercenaryId];
       if (merc) return merc;
     }

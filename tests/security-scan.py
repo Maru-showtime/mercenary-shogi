@@ -135,7 +135,32 @@ try:
         if risky:
             hits.append(("画像メタデータ", rel, 0, str(risky)[:110]))
 except ImportError:
-    print("Pillow が無いため未検査（pip install Pillow）")
+    # Pillow が入っていない環境でも「未検査」で素通りさせない。
+    # 検査が黙って無効になることこそが、公開事故の入口になる。
+    # EXIF/XMP/ICCP チャンクの有無と、先頭部の可読文字列を直接見る。
+    print("Pillow が無いため、バイト列を直接見る簡易検査に切り替えます")
+    META_CHUNKS = (b"EXIF", b"XMP ", b"ICCP", b"tEXt", b"iTXt")
+    RISKY_WORD = re.compile(
+        rb"(?i)(author|creator|copyright|artist|software|photoshop|adobe|gemini|midjourney|[a-z]:\\)"
+    )
+    for rel, path in binaries:
+        if os.path.splitext(path)[1].lower() not in (".webp", ".png", ".jpg", ".jpeg", ".gif"):
+            continue
+        head = io.open(path, "rb").read(8192)
+        chunks = [c.decode() for c in META_CHUNKS if c in head]
+        words = sorted({s.decode("latin-1") for s in re.findall(rb"[ -~]{6,}", head) if RISKY_WORD.search(s)})
+        # 実行環境から拾った「公開されたら困る語」も画像の中を探す
+        for w in secrets:
+            for enc in ("utf-8", "utf-16-le", "cp932"):
+                try:
+                    if w.encode(enc) in head:
+                        words.append(f"<秘匿語 {enc}>")
+                except UnicodeEncodeError:
+                    pass
+        risky = chunks + words
+        print(("NG  " if risky else "OK  ") + f"{rel}  {risky if risky else 'メタデータなし'}")
+        if risky:
+            hits.append(("画像メタデータ", rel, 0, str(risky)[:110]))
 
 print(f"\n検出 {len(hits)} 件")
 sys.exit(0 if not hits else 1)
